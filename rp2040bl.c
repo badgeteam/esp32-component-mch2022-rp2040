@@ -1,12 +1,14 @@
-#include "string.h"
-#include <sdkconfig.h>
+#include "rp2040bl.h"
+
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 #include <freertos/queue.h>
+#include <freertos/task.h>
+#include <sdkconfig.h>
+
 #include "driver/uart.h"
 #include "rp2040.h"
-#include "rp2040bl.h"
+#include "string.h"
 
 #define RP2040_BL_UART 0
 
@@ -15,11 +17,11 @@ void rp2040_bl_install_uart() {
     fflush(stdout);
     ESP_ERROR_CHECK(uart_driver_install(RP2040_BL_UART, 2048, 0, 0, NULL, 0));
     uart_config_t uart_config = {
-        .baud_rate = 115200,
-        .data_bits = UART_DATA_8_BITS,
-        .parity    = UART_PARITY_DISABLE,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .baud_rate  = 115200,
+        .data_bits  = UART_DATA_8_BITS,
+        .parity     = UART_PARITY_DISABLE,
+        .stop_bits  = UART_STOP_BITS_1,
+        .flow_ctrl  = UART_HW_FLOWCTRL_DISABLE,
         .source_clk = UART_SCLK_APB,
     };
     ESP_ERROR_CHECK(uart_param_config(RP2040_BL_UART, &uart_config));
@@ -61,10 +63,10 @@ bool rp2040_bl_get_info(uint32_t* flash_start, uint32_t* flash_size, uint32_t* e
     uint8_t rx_buffer[4 * 6];
     read_stdin(rx_buffer, sizeof(rx_buffer), 1000);
     if (memcmp(rx_buffer, "OKOK", 4) != 0) return false;
-    memcpy((uint8_t*) flash_start,  &rx_buffer[4 * 1], 4);
-    memcpy((uint8_t*) flash_size,   &rx_buffer[4 * 2], 4);
-    memcpy((uint8_t*) erase_size,   &rx_buffer[4 * 3], 4);
-    memcpy((uint8_t*) write_size,   &rx_buffer[4 * 4], 4);
+    memcpy((uint8_t*) flash_start, &rx_buffer[4 * 1], 4);
+    memcpy((uint8_t*) flash_size, &rx_buffer[4 * 2], 4);
+    memcpy((uint8_t*) erase_size, &rx_buffer[4 * 3], 4);
+    memcpy((uint8_t*) write_size, &rx_buffer[4 * 4], 4);
     memcpy((uint8_t*) max_data_len, &rx_buffer[4 * 5], 4);
     return true;
 }

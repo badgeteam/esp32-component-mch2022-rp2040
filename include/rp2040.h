@@ -2,11 +2,11 @@
 
 #include <esp_err.h>
 #include <esp_log.h>
-#include <stdint.h>
 #include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
 #include <freertos/semphr.h>
 #include <freertos/task.h>
-#include <freertos/queue.h>
+#include <stdint.h>
 
 enum {
     RP2040_REG_FW_VER = 0,
@@ -26,7 +26,7 @@ enum {
     RP2040_REG_ADC_VALUE_VBAT2,
     RP2040_REG_USB,
     RP2040_REG_BL_TRIGGER,
-    RP2040_REG_SCRATCH0, // Used by the ESP32 to store boot parameters, can also be read and written to from WebUSB
+    RP2040_REG_SCRATCH0,  // Used by the ESP32 to store boot parameters, can also be read and written to from WebUSB
     RP2040_REG_SCRATCH1,
     RP2040_REG_SCRATCH2,
     RP2040_REG_SCRATCH3,
@@ -92,12 +92,7 @@ enum {
     RP2040_REG_SCRATCH63
 };
 
-enum {
-    RP2040_BL_REG_FW_VER,
-    RP2040_BL_REG_BL_VER,
-    RP2040_BL_REG_BL_STATE,
-    RP2040_BL_REG_BL_CTRL
-};
+enum { RP2040_BL_REG_FW_VER, RP2040_BL_REG_BL_VER, RP2040_BL_REG_BL_STATE, RP2040_BL_REG_BL_CTRL };
 
 enum {
     RP2040_INPUT_BUTTON_HOME = 0,

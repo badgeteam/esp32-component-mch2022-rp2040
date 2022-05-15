@@ -4,12 +4,14 @@
  * SPDX-License-Identifier: MIT
  */
 
-#include <sdkconfig.h>
-#include <driver/gpio.h>
 #include "rp2040.h"
+
+#include <driver/gpio.h>
+#include <sdkconfig.h>
+
 #include "managed_i2c.h"
 
-static const char *TAG = "RP2040";
+static const char* TAG = "RP2040";
 
 inline void _send_input_change(RP2040* device, uint8_t input, bool value) {
     rp2040_input_message_t message;
@@ -18,10 +20,10 @@ inline void _send_input_change(RP2040* device, uint8_t input, bool value) {
     xQueueSend(device->queue, &message, portMAX_DELAY);
 }
 
-void rp2040_intr_task(void *arg) {
-    RP2040* device = (RP2040*) arg;
+void rp2040_intr_task(void* arg) {
+    RP2040*  device = (RP2040*) arg;
     uint32_t state;
-    
+
     while (1) {
         if (xSemaphoreTake(device->_intr_trigger, portMAX_DELAY)) {
             esp_err_t res = i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_INPUT1, (uint8_t*) &state, 4);
@@ -29,7 +31,7 @@ void rp2040_intr_task(void *arg) {
                 ESP_LOGE(TAG, "RP2040 interrupt task failed to read from RP2040");
                 continue;
             }
-            //ESP_LOGW(TAG, "RP2040 input state %08x", state);
+            // ESP_LOGW(TAG, "RP2040 input state %08x", state);
             uint16_t interrupt = state >> 16;
             uint16_t values    = state & 0xFFFF;
             for (uint8_t index = 0; index < 16; index++) {
@@ -42,7 +44,7 @@ void rp2040_intr_task(void *arg) {
     }
 }
 
-void rp2040_intr_handler(void *arg) {
+void rp2040_intr_handler(void* arg) {
     /* in interrupt handler context */
     RP2040* device = (RP2040*) arg;
     xSemaphoreGiveFromISR(device->_intr_trigger, NULL);
@@ -73,12 +75,12 @@ esp_err_t rp2040_init(RP2040* device) {
         ESP_LOGE(TAG, "Failed to read GPIO state");
         return res;
     }
-    
-    //Create interrupt trigger
+
+    // Create interrupt trigger
     device->_intr_trigger = xSemaphoreCreateBinary();
     if (device->_intr_trigger == NULL) return ESP_ERR_NO_MEM;
-    
-    //Attach interrupt to interrupt pin
+
+    // Attach interrupt to interrupt pin
     if (device->pin_interrupt >= 0) {
         res = gpio_isr_handler_add(device->pin_interrupt, rp2040_intr_handler, (void*) device);
         if (res != ESP_OK) return res;
@@ -93,7 +95,7 @@ esp_err_t rp2040_init(RP2040* device) {
 
         res = gpio_config(&io_conf);
         if (res != ESP_OK) return res;
-        
+
         xTaskCreate(&rp2040_intr_task, "RP2040 interrupt", 4096, (void*) device, 10, &device->_intr_task_handle);
         xSemaphoreGive(device->_intr_trigger);
     }
@@ -145,11 +147,11 @@ esp_err_t rp2040_set_gpio_dir(RP2040* device, uint8_t gpio, bool direction) {
 
 esp_err_t rp2040_get_gpio_value(RP2040* device, uint8_t gpio, bool* value) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
-    uint8_t reg_value;
+    uint8_t   reg_value;
     esp_err_t res = i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_GPIO_IN, &reg_value, 1);
     if (res != ESP_OK) return res;
     *value = (reg_value >> gpio) & 0x01;
-    return ESP_OK;    
+    return ESP_OK;
 }
 
 esp_err_t rp2040_set_gpio_value(RP2040* device, uint8_t gpio, bool value) {
@@ -168,7 +170,7 @@ esp_err_t rp2040_get_lcd_backlight(RP2040* device, uint8_t* brightness) {
 }
 
 esp_err_t rp2040_set_lcd_backlight(RP2040* device, uint8_t brightness) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_OK; // Ignore if unsupported
+    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_OK;  // Ignore if unsupported
     return i2c_write_reg_n(device->i2c_bus, device->i2c_address, RP2040_REG_LCD_BACKLIGHT, &brightness, 1);
 }
 
