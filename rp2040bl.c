@@ -33,7 +33,7 @@ void rp2040_bl_uninstall_uart() {
 }
 
 void flush_stdin() {
-    if (!uart_is_driver_installed(RP2040_BL_UART)) return false;
+    if (!uart_is_driver_installed(RP2040_BL_UART)) return;
     uint8_t data[256];
     uart_read_bytes(RP2040_BL_UART, data, sizeof(data), 10 / portTICK_PERIOD_MS);
 }

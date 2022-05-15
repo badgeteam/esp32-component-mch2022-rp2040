@@ -2,6 +2,7 @@
 
 #include <esp_err.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 void rp2040_bl_install_uart();
 void rp2040_bl_uninstall_uart();
