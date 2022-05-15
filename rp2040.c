@@ -184,3 +184,8 @@ esp_err_t rp2040_read_buttons(RP2040* device, uint16_t* value) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
     return i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_INPUT1, (uint8_t*) value, 2);
 }
+
+esp_err_t rp2040_get_uid(RP2040* device, uint8_t* uid) {
+    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_UID0, uid, 8);
+}

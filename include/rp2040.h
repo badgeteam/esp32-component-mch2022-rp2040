@@ -20,12 +20,27 @@ enum {
     RP2040_REG_INTERRUPT1,
     RP2040_REG_INTERRUPT2,
     RP2040_REG_ADC_TRIGGER,
-    RP2040_REG_ADC_VALUE_VUSB1,
-    RP2040_REG_ADC_VALUE_VUSB2,
-    RP2040_REG_ADC_VALUE_VBAT1,
-    RP2040_REG_ADC_VALUE_VBAT2,
+    RP2040_REG_ADC_VALUE_VUSB_LO,
+    RP2040_REG_ADC_VALUE_VUSB_HI,
+    RP2040_REG_ADC_VALUE_VBAT_LO,
+    RP2040_REG_ADC_VALUE_VBAT_HI,
     RP2040_REG_USB,
     RP2040_REG_BL_TRIGGER,
+    RP2040_REG_RESERVED0,
+    RP2040_REG_RESERVED1,
+    RP2040_REG_RESERVED2,
+    RP2040_REG_RESERVED3,
+    RP2040_REG_RESERVED4,
+    RP2040_REG_RESERVED5,
+    RP2040_REG_RESERVED6,
+    RP2040_REG_UID0, // Unique board identifier of the RP2040
+    RP2040_REG_UID1,
+    RP2040_REG_UID2,
+    RP2040_REG_UID3,
+    RP2040_REG_UID4,
+    RP2040_REG_UID5,
+    RP2040_REG_UID6,
+    RP2040_REG_UID7,
     RP2040_REG_SCRATCH0,  // Used by the ESP32 to store boot parameters, can also be read and written to from WebUSB
     RP2040_REG_SCRATCH1,
     RP2040_REG_SCRATCH2,
@@ -151,3 +166,5 @@ esp_err_t rp2040_set_lcd_backlight(RP2040* device, uint8_t brightness);
 esp_err_t rp2040_set_fpga(RP2040* device, bool enabled);
 
 esp_err_t rp2040_read_buttons(RP2040* device, uint16_t* value);
+
+esp_err_t rp2040_get_uid(RP2040* device, uint8_t* uid);
