@@ -7,11 +7,62 @@
 #include "rp2040.h"
 
 #include <driver/gpio.h>
+#include <driver/i2c.h>
 #include <sdkconfig.h>
 
-#include "managed_i2c.h"
-
 static const char* TAG = "RP2040";
+
+esp_err_t rp2040_read_reg(RP2040* device, uint8_t reg, uint8_t *value, size_t value_len) {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    esp_err_t res = i2c_master_start(cmd);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    res = i2c_master_write_byte(cmd, ( device->i2c_address << 1 ) | I2C_MASTER_WRITE, true);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    res = i2c_master_write_byte(cmd, reg, true);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    res = i2c_master_start(cmd);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    res = i2c_master_write_byte(cmd, ( device->i2c_address << 1 ) | I2C_MASTER_READ, true);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    if (value_len > 1) {
+        res = i2c_master_read(cmd, value, value_len-1, false);
+        if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    }
+    res = i2c_master_read_byte(cmd, &value[value_len-1], true);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    res = i2c_master_stop(cmd);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    ESP_LOGI(TAG, "RP2040 read reg %02X start", reg);
+    if (device->i2c_semaphore != NULL) xSemaphoreTake(device->i2c_semaphore, portMAX_DELAY);
+    res = i2c_master_cmd_begin(device->i2c_bus, cmd, 2000 / portTICK_RATE_MS);
+    if (device->i2c_semaphore != NULL) xSemaphoreGive(device->i2c_semaphore);
+    ESP_LOGI(TAG, "RP2040 read reg %02X done, res = %d", reg, res);
+    i2c_cmd_link_delete(cmd);
+    return res;
+}
+
+esp_err_t rp2040_write_reg(RP2040* device, uint8_t reg, uint8_t *value, size_t value_len) {
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    esp_err_t res = i2c_master_start(cmd);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    res = i2c_master_write_byte(cmd, ( device->i2c_address << 1 ) | I2C_MASTER_WRITE, true);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    res = i2c_master_write_byte(cmd, reg, true);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    for (size_t i = 0; i < value_len; i++) {
+        res = i2c_master_write_byte(cmd, value[i], true);
+        if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    }
+    res = i2c_master_stop(cmd);
+    if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
+    ESP_LOGI(TAG, "RP2040 write reg %02X start", reg);
+    if (device->i2c_semaphore != NULL) xSemaphoreTake(device->i2c_semaphore, portMAX_DELAY);
+    res = i2c_master_cmd_begin(device->i2c_bus, cmd, 2000 / portTICK_RATE_MS);
+    if (device->i2c_semaphore != NULL) xSemaphoreGive(device->i2c_semaphore);
+    ESP_LOGI(TAG, "RP2040 write reg %02X done, res = %d", reg, res);
+    i2c_cmd_link_delete(cmd);
+    return res;
+}
 
 inline void _send_input_change(RP2040* device, uint8_t input, bool value) {
     rp2040_input_message_t message;
@@ -26,7 +77,7 @@ void rp2040_intr_task(void* arg) {
 
     while (1) {
         if (xSemaphoreTake(device->_intr_trigger, portMAX_DELAY)) {
-            esp_err_t res = i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_INPUT1, (uint8_t*) &state, 4);
+            esp_err_t res = rp2040_read_reg(device, RP2040_REG_INPUT1, (uint8_t*) &state, 4);
             if (res != ESP_OK) {
                 ESP_LOGE(TAG, "RP2040 interrupt task failed to read from RP2040");
                 continue;
@@ -64,13 +115,13 @@ esp_err_t rp2040_init(RP2040* device) {
         return ESP_ERR_INVALID_VERSION;
     }
 
-    res = i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_GPIO_DIR, &device->_gpio_direction, 1);
+    res = rp2040_read_reg(device, RP2040_REG_GPIO_DIR, &device->_gpio_direction, 1);
     if (res != ESP_OK) {
         ESP_LOGE(TAG, "Failed to read GPIO direction");
         return res;
     }
 
-    res = i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_GPIO_OUT, &device->_gpio_value, 1);
+    res = rp2040_read_reg(device, RP2040_REG_GPIO_OUT, &device->_gpio_value, 1);
     if (res != ESP_OK) {
         ESP_LOGE(TAG, "Failed to read GPIO state");
         return res;
@@ -104,33 +155,33 @@ esp_err_t rp2040_init(RP2040* device) {
 }
 
 esp_err_t rp2040_get_firmware_version(RP2040* device, uint8_t* version) {
-    return i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_FW_VER, version, 1);
+    return rp2040_read_reg(device, RP2040_REG_FW_VER, version, 1);
 }
 
 esp_err_t rp2040_get_bootloader_version(RP2040* device, uint8_t* version) {
     if (device->_fw_version != 0xFF) return ESP_FAIL;
-    return i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_BL_REG_BL_VER, version, 1);
+    return rp2040_read_reg(device, RP2040_BL_REG_BL_VER, version, 1);
 }
 
 esp_err_t rp2040_get_bootloader_state(RP2040* device, uint8_t* state) {
     if (device->_fw_version != 0xFF) return ESP_FAIL;
-    return i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_BL_REG_BL_STATE, state, 1);
+    return rp2040_read_reg(device, RP2040_BL_REG_BL_STATE, state, 1);
 }
 
 esp_err_t rp2040_set_bootloader_ctrl(RP2040* device, uint8_t action) {
     if (device->_fw_version != 0xFF) return ESP_FAIL;
-    return i2c_write_reg_n(device->i2c_bus, device->i2c_address, RP2040_BL_REG_BL_CTRL, &action, 1);
+    return rp2040_write_reg(device, RP2040_BL_REG_BL_CTRL, &action, 1);
 }
 
 esp_err_t rp2040_reboot_to_bootloader(RP2040* device) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
     uint8_t value = 0xBE;
-    return i2c_write_reg_n(device->i2c_bus, device->i2c_address, RP2040_REG_BL_TRIGGER, &value, 1);
+    return rp2040_write_reg(device, RP2040_REG_BL_TRIGGER, &value, 1);
 }
 
 esp_err_t rp2040_get_gpio_dir(RP2040* device, uint8_t gpio, bool* direction) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
-    esp_err_t res = i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_GPIO_DIR, &device->_gpio_direction, 1);
+    esp_err_t res = rp2040_read_reg(device, RP2040_REG_GPIO_DIR, &device->_gpio_direction, 1);
     if (res != ESP_OK) return res;
     *direction = (device->_gpio_direction >> gpio) & 0x01;
     return ESP_OK;
@@ -142,13 +193,13 @@ esp_err_t rp2040_set_gpio_dir(RP2040* device, uint8_t gpio, bool direction) {
     } else {
         device->_gpio_direction &= ~(1UL << gpio);
     }
-    return i2c_write_reg_n(device->i2c_bus, device->i2c_address, RP2040_REG_GPIO_DIR, &device->_gpio_direction, 1);
+    return rp2040_write_reg(device, RP2040_REG_GPIO_DIR, &device->_gpio_direction, 1);
 }
 
 esp_err_t rp2040_get_gpio_value(RP2040* device, uint8_t gpio, bool* value) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
     uint8_t   reg_value;
-    esp_err_t res = i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_GPIO_IN, &reg_value, 1);
+    esp_err_t res = rp2040_read_reg(device, RP2040_REG_GPIO_IN, &reg_value, 1);
     if (res != ESP_OK) return res;
     *value = (reg_value >> gpio) & 0x01;
     return ESP_OK;
@@ -161,31 +212,31 @@ esp_err_t rp2040_set_gpio_value(RP2040* device, uint8_t gpio, bool value) {
     } else {
         device->_gpio_value &= ~(1UL << gpio);
     }
-    return i2c_write_reg_n(device->i2c_bus, device->i2c_address, RP2040_REG_GPIO_OUT, &device->_gpio_value, 1);
+    return rp2040_write_reg(device, RP2040_REG_GPIO_OUT, &device->_gpio_value, 1);
 }
 
 esp_err_t rp2040_get_lcd_backlight(RP2040* device, uint8_t* brightness) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
-    return i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_LCD_BACKLIGHT, brightness, 1);
+    return rp2040_read_reg(device, RP2040_REG_LCD_BACKLIGHT, brightness, 1);
 }
 
 esp_err_t rp2040_set_lcd_backlight(RP2040* device, uint8_t brightness) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_OK;  // Ignore if unsupported
-    return i2c_write_reg_n(device->i2c_bus, device->i2c_address, RP2040_REG_LCD_BACKLIGHT, &brightness, 1);
+    return rp2040_write_reg(device, RP2040_REG_LCD_BACKLIGHT, &brightness, 1);
 }
 
 esp_err_t rp2040_set_fpga(RP2040* device, bool enabled) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
     uint8_t value = enabled ? 0x01 : 0x00;
-    return i2c_write_reg_n(device->i2c_bus, device->i2c_address, RP2040_REG_FPGA, &value, 1);
+    return rp2040_write_reg(device, RP2040_REG_FPGA, &value, 1);
 }
 
 esp_err_t rp2040_read_buttons(RP2040* device, uint16_t* value) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
-    return i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_INPUT1, (uint8_t*) value, 2);
+    return rp2040_read_reg(device, RP2040_REG_INPUT1, (uint8_t*) value, 2);
 }
 
 esp_err_t rp2040_get_uid(RP2040* device, uint8_t* uid) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
-    return i2c_read_reg(device->i2c_bus, device->i2c_address, RP2040_REG_UID0, uid, 8);
+    return rp2040_read_reg(device, RP2040_REG_UID0, uid, 8);
 }

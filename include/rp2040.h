@@ -132,6 +132,7 @@ typedef struct {
     int              i2c_address;
     int              pin_interrupt;
     xQueueHandle     queue;
+    xSemaphoreHandle i2c_semaphore;
     rp2040_intr_t    _intr_handler;
     TaskHandle_t     _intr_task_handle;
     xSemaphoreHandle _intr_trigger;
