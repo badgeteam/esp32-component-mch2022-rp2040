@@ -32,11 +32,9 @@ esp_err_t rp2040_read_reg(RP2040* device, uint8_t reg, uint8_t *value, size_t va
     if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
     res = i2c_master_stop(cmd);
     if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
-    ESP_LOGI(TAG, "RP2040 read reg %02X start", reg);
     if (device->i2c_semaphore != NULL) xSemaphoreTake(device->i2c_semaphore, portMAX_DELAY);
     res = i2c_master_cmd_begin(device->i2c_bus, cmd, 2000 / portTICK_RATE_MS);
     if (device->i2c_semaphore != NULL) xSemaphoreGive(device->i2c_semaphore);
-    ESP_LOGI(TAG, "RP2040 read reg %02X done, res = %d", reg, res);
     i2c_cmd_link_delete(cmd);
     return res;
 }
