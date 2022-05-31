@@ -165,6 +165,7 @@ esp_err_t rp2040_get_lcd_backlight(RP2040* device, uint8_t* brightness);
 esp_err_t rp2040_set_lcd_backlight(RP2040* device, uint8_t brightness);
 
 esp_err_t rp2040_set_fpga(RP2040* device, bool enabled);
+esp_err_t rp2040_set_fpga_loopback(RP2040* device, bool enabled, bool loopback);
 
 esp_err_t rp2040_read_buttons(RP2040* device, uint16_t* value);
 
