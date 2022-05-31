@@ -229,6 +229,12 @@ esp_err_t rp2040_set_fpga(RP2040* device, bool enabled) {
     return rp2040_write_reg(device, RP2040_REG_FPGA, &value, 1);
 }
 
+esp_err_t rp2040_set_fpga_loopback(RP2040* device, bool enabled, bool loopback) {
+    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    uint8_t value = (enabled ? 0x01 : 0x00) | (loopback ? 0x02 : 0x00);
+    return rp2040_write_reg(device, RP2040_REG_FPGA, &value, 1);
+}
+
 esp_err_t rp2040_read_buttons(RP2040* device, uint16_t* value) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_INPUT1, (uint8_t*) value, 2);
