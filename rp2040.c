@@ -244,3 +244,46 @@ esp_err_t rp2040_get_uid(RP2040* device, uint8_t* uid) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_UID0, uid, 8);
 }
+
+const float conversion_factor = 3.3f / (1 << 12); // 12-bit ADC with 3.3v vref
+
+esp_err_t rp2040_read_vbat_raw(RP2040* device, uint16_t* value) {
+    if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_read_reg(device, RP2040_REG_ADC_VALUE_VBAT_LO, (uint8_t*) value, 2);
+}
+
+esp_err_t rp2040_read_vbat(RP2040* device, float* value) {
+    uint16_t raw;
+    esp_err_t res = rp2040_read_vbat_raw(device, &raw);
+    if (res != ESP_OK) return res;
+    *value =  raw * conversion_factor * 2; // Connected through 100k/100k divider
+    return res;
+}
+
+esp_err_t rp2040_read_vusb_raw(RP2040* device, uint16_t* value) {
+    if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_read_reg(device, RP2040_REG_ADC_VALUE_VUSB_LO, (uint8_t*) value, 2);
+}
+
+esp_err_t rp2040_read_vusb(RP2040* device, float* value) {
+    uint16_t raw;
+    esp_err_t res = rp2040_read_vusb_raw(device, &raw);
+    if (res != ESP_OK) return res;
+    *value = raw * conversion_factor * 2; // Connected through 100k/100k divider
+    return res;
+}
+
+esp_err_t rp2040_read_temp(RP2040* device, uint16_t* value) {
+    if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_read_reg(device, RP2040_REG_ADC_VALUE_TEMP_LO, (uint8_t*) value, 2);
+}
+
+esp_err_t rp2040_get_charging(RP2040* device, uint8_t* charging) {
+    if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_read_reg(device, RP2040_REG_CHARGING_STATE, charging, 1);
+}
+
+esp_err_t rp2040_get_usb(RP2040* device, uint8_t* usb) {
+    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_read_reg(device, RP2040_REG_USB, usb, 1);
+}

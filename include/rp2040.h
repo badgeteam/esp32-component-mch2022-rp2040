@@ -30,9 +30,9 @@ enum {
     RP2040_REG_RESERVED1,
     RP2040_REG_RESERVED2,
     RP2040_REG_RESERVED3,
-    RP2040_REG_RESERVED4,
-    RP2040_REG_RESERVED5,
-    RP2040_REG_RESERVED6,
+    RP2040_REG_CHARGING_STATE,
+    RP2040_REG_ADC_VALUE_TEMP_LO,
+    RP2040_REG_ADC_VALUE_TEMP_HI,
     RP2040_REG_UID0, // Unique board identifier of the RP2040
     RP2040_REG_UID1,
     RP2040_REG_UID2,
@@ -170,3 +170,14 @@ esp_err_t rp2040_set_fpga_loopback(RP2040* device, bool enabled, bool loopback);
 esp_err_t rp2040_read_buttons(RP2040* device, uint16_t* value);
 
 esp_err_t rp2040_get_uid(RP2040* device, uint8_t* uid);
+
+esp_err_t rp2040_read_vusb_raw(RP2040* device, uint16_t* value);
+esp_err_t rp2040_read_vusb(RP2040* device, float* value);
+
+esp_err_t rp2040_read_vbat_raw(RP2040* device, uint16_t* value);
+esp_err_t rp2040_read_vbat(RP2040* device, float* value);
+
+esp_err_t rp2040_read_temp(RP2040* device, uint16_t* value);
+esp_err_t rp2040_get_charging(RP2040* device, uint8_t* charging);
+
+esp_err_t rp2040_get_usb(RP2040* device, uint8_t* usb);
