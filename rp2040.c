@@ -62,7 +62,7 @@ esp_err_t rp2040_write_reg(RP2040* device, uint8_t reg, uint8_t *value, size_t v
     return res;
 }
 
-inline void _send_input_change(RP2040* device, uint8_t input, bool value) {
+void _send_input_change(RP2040* device, uint8_t input, bool value) {
     rp2040_input_message_t message;
     message.input = input;
     message.state = value;
