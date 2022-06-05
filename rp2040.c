@@ -287,3 +287,8 @@ esp_err_t rp2040_get_usb(RP2040* device, uint8_t* usb) {
     if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_USB, usb, 1);
 }
+
+esp_err_t rp2040_get_webusb_mode(RP2040* device, uint8_t* mode) {
+    if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_read_reg(device, RP2040_REG_WEBUSB_MODE, mode, 1);
+}

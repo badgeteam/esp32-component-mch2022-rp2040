@@ -26,7 +26,7 @@ enum {
     RP2040_REG_ADC_VALUE_VBAT_HI,
     RP2040_REG_USB,
     RP2040_REG_BL_TRIGGER,
-    RP2040_REG_RESERVED0,
+    RP2040_REG_WEBUSB_MODE,
     RP2040_REG_RESERVED1,
     RP2040_REG_RESERVED2,
     RP2040_REG_RESERVED3,
@@ -181,3 +181,5 @@ esp_err_t rp2040_read_temp(RP2040* device, uint16_t* value);
 esp_err_t rp2040_get_charging(RP2040* device, uint8_t* charging);
 
 esp_err_t rp2040_get_usb(RP2040* device, uint8_t* usb);
+
+esp_err_t rp2040_get_webusb_mode(RP2040* device, uint8_t* mode);
