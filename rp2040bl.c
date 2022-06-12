@@ -17,7 +17,7 @@ void rp2040_bl_install_uart() {
     fflush(stdout);
     ESP_ERROR_CHECK(uart_driver_install(RP2040_BL_UART, 2048, 0, 0, NULL, 0));
     uart_config_t uart_config = {
-        .baud_rate  = 115200,
+        .baud_rate  = 921600,
         .data_bits  = UART_DATA_8_BITS,
         .parity     = UART_PARITY_DISABLE,
         .stop_bits  = UART_STOP_BITS_1,
@@ -101,15 +101,14 @@ bool rp2040_bl_write(uint32_t address, uint32_t length, uint8_t* data, uint32_t*
     return true;
 }
 
-bool rp2040_bl_seal(uint32_t addr, uint32_t vtor, uint32_t length, uint32_t crc) {
+bool rp2040_bl_seal(uint32_t vtor, uint32_t length, uint32_t crc) {
     if (!uart_is_driver_installed(RP2040_BL_UART)) return false;
     flush_stdin();
-    char command[20];
+    char command[16];
     snprintf(command, 5, "SEAL");
-    memcpy(command + 4, (char*) &addr, 4);
-    memcpy(command + 8, (char*) &vtor, 4);
-    memcpy(command + 12, (char*) &length, 4);
-    memcpy(command + 16, (char*) &crc, 4);
+    memcpy(command + 4, (char*) &vtor, 4);
+    memcpy(command + 8, (char*) &length, 4);
+    memcpy(command + 12, (char*) &crc, 4);
     uart_write_bytes(RP2040_BL_UART, command, sizeof(command));
     uint8_t rx_buffer[4];
     read_stdin(rx_buffer, sizeof(rx_buffer), 10000);
