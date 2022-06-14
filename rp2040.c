@@ -97,6 +97,7 @@ void rp2040_intr_handler(void* arg) {
     /* in interrupt handler context */
     RP2040* device = (RP2040*) arg;
     xSemaphoreGiveFromISR(device->_intr_trigger, NULL);
+    portYIELD_FROM_ISR();
 }
 
 esp_err_t rp2040_init(RP2040* device) {
