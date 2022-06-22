@@ -33,7 +33,7 @@ esp_err_t rp2040_read_reg(RP2040* device, uint8_t reg, uint8_t *value, size_t va
     res = i2c_master_stop(cmd);
     if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
     if (device->i2c_semaphore != NULL) xSemaphoreTake(device->i2c_semaphore, portMAX_DELAY);
-    res = i2c_master_cmd_begin(device->i2c_bus, cmd, 2000 / portTICK_RATE_MS);
+    res = i2c_master_cmd_begin(device->i2c_bus, cmd, 500 / portTICK_RATE_MS);
     if (device->i2c_semaphore != NULL) xSemaphoreGive(device->i2c_semaphore);
     i2c_cmd_link_delete(cmd);
     return res;
@@ -53,11 +53,9 @@ esp_err_t rp2040_write_reg(RP2040* device, uint8_t reg, uint8_t *value, size_t v
     }
     res = i2c_master_stop(cmd);
     if (res != ESP_OK) { i2c_cmd_link_delete(cmd); return res; }
-    ESP_LOGI(TAG, "RP2040 write reg %02X start", reg);
     if (device->i2c_semaphore != NULL) xSemaphoreTake(device->i2c_semaphore, portMAX_DELAY);
-    res = i2c_master_cmd_begin(device->i2c_bus, cmd, 2000 / portTICK_RATE_MS);
+    res = i2c_master_cmd_begin(device->i2c_bus, cmd, 500 / portTICK_RATE_MS);
     if (device->i2c_semaphore != NULL) xSemaphoreGive(device->i2c_semaphore);
-    ESP_LOGI(TAG, "RP2040 write reg %02X done, res = %d", reg, res);
     i2c_cmd_link_delete(cmd);
     return res;
 }
@@ -74,7 +72,7 @@ void rp2040_intr_task(void* arg) {
     uint32_t state;
 
     while (1) {
-        if (xSemaphoreTake(device->_intr_trigger, portMAX_DELAY)) {
+        if (xSemaphoreTake(device->_intr_trigger, pdMS_TO_TICKS(1000))) {
             esp_err_t res = rp2040_read_reg(device, RP2040_REG_INPUT1, (uint8_t*) &state, 4);
             if (res != ESP_OK) {
                 ESP_LOGE(TAG, "RP2040 interrupt task failed to read from RP2040");
@@ -88,7 +86,7 @@ void rp2040_intr_task(void* arg) {
                     _send_input_change(device, index, (values >> index) & 0x01);
                 }
             }
-            vTaskDelay(10 / portTICK_PERIOD_MS);
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
     }
 }
@@ -97,6 +95,7 @@ void rp2040_intr_handler(void* arg) {
     /* in interrupt handler context */
     RP2040* device = (RP2040*) arg;
     xSemaphoreGiveFromISR(device->_intr_trigger, NULL);
+    portYIELD_FROM_ISR();
 }
 
 esp_err_t rp2040_init(RP2040* device) {
@@ -108,7 +107,7 @@ esp_err_t rp2040_init(RP2040* device) {
         return res;
     }
 
-    if (device->_fw_version < 1) {
+    if (device->_fw_version < 0x01) {
         ESP_LOGE(TAG, "Unsupported RP2040 firmware version (%u) found", device->_fw_version);
         return ESP_ERR_INVALID_VERSION;
     }
@@ -291,4 +290,19 @@ esp_err_t rp2040_get_usb(RP2040* device, uint8_t* usb) {
 esp_err_t rp2040_get_webusb_mode(RP2040* device, uint8_t* mode) {
     if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_WEBUSB_MODE, mode, 1);
+}
+
+esp_err_t rp2040_get_crash_state(RP2040* device, uint8_t* crash_debug) {
+    if ((device->_fw_version < 0x06) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_read_reg(device, I2C_REGISTER_CRASH_DEBUG, crash_debug, 1);
+}
+
+esp_err_t rp2040_ir_send(RP2040* device, uint16_t address, uint8_t command) {
+    if ((device->_fw_version < 0x06) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    uint8_t buffer[4];
+    buffer[0] = address & 0xFF; // Address low byte
+    buffer[1] = address >> 8; // Address high byte
+    buffer[2] = command; // Command
+    buffer[3] = 0x01; // Trigger
+    return rp2040_write_reg(device, I2C_REGISTER_IR_ADDRESS_LO, buffer, sizeof(buffer));
 }

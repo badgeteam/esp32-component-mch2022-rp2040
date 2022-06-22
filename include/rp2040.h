@@ -27,7 +27,7 @@ enum {
     RP2040_REG_USB,
     RP2040_REG_BL_TRIGGER,
     RP2040_REG_WEBUSB_MODE,
-    RP2040_REG_RESERVED1,
+    I2C_REGISTER_CRASH_DEBUG,
     RP2040_REG_RESERVED2,
     RP2040_REG_RESERVED3,
     RP2040_REG_CHARGING_STATE,
@@ -104,7 +104,11 @@ enum {
     RP2040_REG_SCRATCH60,
     RP2040_REG_SCRATCH61,
     RP2040_REG_SCRATCH62,
-    RP2040_REG_SCRATCH63
+    RP2040_REG_SCRATCH63,
+    I2C_REGISTER_IR_ADDRESS_LO,
+    I2C_REGISTER_IR_ADDRESS_HI,
+    I2C_REGISTER_IR_COMMAND,
+    I2C_REGISTER_IR_TRIGGER,
 };
 
 enum { RP2040_BL_REG_FW_VER, RP2040_BL_REG_BL_VER, RP2040_BL_REG_BL_STATE, RP2040_BL_REG_BL_CTRL };
@@ -183,3 +187,7 @@ esp_err_t rp2040_get_charging(RP2040* device, uint8_t* charging);
 esp_err_t rp2040_get_usb(RP2040* device, uint8_t* usb);
 
 esp_err_t rp2040_get_webusb_mode(RP2040* device, uint8_t* mode);
+
+esp_err_t rp2040_get_crash_state(RP2040* device, uint8_t* crash_debug);
+
+esp_err_t rp2040_ir_send(RP2040* device, uint16_t address, uint8_t command);
