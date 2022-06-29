@@ -67,12 +67,12 @@ void _send_input_change(RP2040* device, uint8_t input, bool value) {
     xQueueSend(device->queue, &message, portMAX_DELAY);
 }
 
-void rp2040_intr_task(void* arg) {
+static void rp2040_intr_task(void* arg) {
     RP2040*  device = (RP2040*) arg;
     uint32_t state;
 
     while (1) {
-        if (xSemaphoreTake(device->_intr_trigger, pdMS_TO_TICKS(1000))) {
+        if (xSemaphoreTake(device->_intr_trigger, portMAX_DELAY)) {
             esp_err_t res = rp2040_read_reg(device, RP2040_REG_INPUT1, (uint8_t*) &state, 4);
             if (res != ESP_OK) {
                 ESP_LOGE(TAG, "RP2040 interrupt task failed to read from RP2040");
@@ -86,12 +86,11 @@ void rp2040_intr_task(void* arg) {
                     _send_input_change(device, index, (values >> index) & 0x01);
                 }
             }
-            vTaskDelay(pdMS_TO_TICKS(10));
         }
     }
 }
 
-void rp2040_intr_handler(void* arg) {
+static void IRAM_ATTR rp2040_intr_handler(void* arg) {
     /* in interrupt handler context */
     RP2040* device = (RP2040*) arg;
     xSemaphoreGiveFromISR(device->_intr_trigger, NULL);
@@ -294,7 +293,7 @@ esp_err_t rp2040_get_webusb_mode(RP2040* device, uint8_t* mode) {
 
 esp_err_t rp2040_get_crash_state(RP2040* device, uint8_t* crash_debug) {
     if ((device->_fw_version < 0x06) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
-    return rp2040_read_reg(device, I2C_REGISTER_CRASH_DEBUG, crash_debug, 1);
+    return rp2040_read_reg(device, RP2040_REG_CRASH_DEBUG, crash_debug, 1);
 }
 
 esp_err_t rp2040_ir_send(RP2040* device, uint16_t address, uint8_t command) {
@@ -305,4 +304,19 @@ esp_err_t rp2040_ir_send(RP2040* device, uint16_t address, uint8_t command) {
     buffer[2] = command; // Command
     buffer[3] = 0x01; // Trigger
     return rp2040_write_reg(device, I2C_REGISTER_IR_ADDRESS_LO, buffer, sizeof(buffer));
+}
+
+esp_err_t rp2040_get_reset_attempted(RP2040* device, uint8_t* reset_attempted) {
+    if ((device->_fw_version < 0x08) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_read_reg(device, RP2040_REG_RESET_ATTEMPTED, reset_attempted, 1);
+}
+
+esp_err_t rp2040_set_reset_attempted(RP2040* device, uint8_t reset_attempted) {
+    if ((device->_fw_version < 0x08) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_write_reg(device, RP2040_REG_RESET_ATTEMPTED, &reset_attempted, 1);
+}
+
+esp_err_t rp2040_set_reset_lock(RP2040* device, uint8_t lock) {
+    if ((device->_fw_version < 0x08) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_write_reg(device, RP2040_REG_RESET_LOCK, &lock, 1);
 }

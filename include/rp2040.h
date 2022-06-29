@@ -27,9 +27,9 @@ enum {
     RP2040_REG_USB,
     RP2040_REG_BL_TRIGGER,
     RP2040_REG_WEBUSB_MODE,
-    I2C_REGISTER_CRASH_DEBUG,
-    RP2040_REG_RESERVED2,
-    RP2040_REG_RESERVED3,
+    RP2040_REG_CRASH_DEBUG,
+    RP2040_REG_RESET_LOCK,
+    RP2040_REG_RESET_ATTEMPTED,
     RP2040_REG_CHARGING_STATE,
     RP2040_REG_ADC_VALUE_TEMP_LO,
     RP2040_REG_ADC_VALUE_TEMP_HI,
@@ -191,3 +191,7 @@ esp_err_t rp2040_get_webusb_mode(RP2040* device, uint8_t* mode);
 esp_err_t rp2040_get_crash_state(RP2040* device, uint8_t* crash_debug);
 
 esp_err_t rp2040_ir_send(RP2040* device, uint16_t address, uint8_t command);
+
+esp_err_t rp2040_get_reset_attempted(RP2040* device, uint8_t* reset_attempted);
+esp_err_t rp2040_set_reset_attempted(RP2040* device, uint8_t reset_attempted);
+esp_err_t rp2040_set_reset_lock(RP2040* device, uint8_t lock);
