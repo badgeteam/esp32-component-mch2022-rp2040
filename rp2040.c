@@ -151,7 +151,11 @@ esp_err_t rp2040_init(RP2040* device) {
 }
 
 esp_err_t rp2040_get_firmware_version(RP2040* device, uint8_t* version) {
-    return rp2040_read_reg(device, RP2040_REG_FW_VER, version, 1);
+    esp_err_t res = rp2040_read_reg(device, RP2040_REG_FW_VER, version, 1);
+    if (res == ESP_OK) {
+        device->_fw_version = *version;
+    }
+    return res;
 }
 
 esp_err_t rp2040_get_bootloader_version(RP2040* device, uint8_t* version) {
