@@ -307,7 +307,7 @@ esp_err_t rp2040_ir_send(RP2040* device, uint16_t address, uint8_t command) {
     buffer[1] = address >> 8; // Address high byte
     buffer[2] = command; // Command
     buffer[3] = 0x01; // Trigger
-    return rp2040_write_reg(device, I2C_REGISTER_IR_ADDRESS_LO, buffer, sizeof(buffer));
+    return rp2040_write_reg(device, RP2040_REG_IR_ADDRESS_LO, buffer, sizeof(buffer));
 }
 
 esp_err_t rp2040_get_reset_attempted(RP2040* device, uint8_t* reset_attempted) {
@@ -323,4 +323,27 @@ esp_err_t rp2040_set_reset_attempted(RP2040* device, uint8_t reset_attempted) {
 esp_err_t rp2040_set_reset_lock(RP2040* device, uint8_t lock) {
     if ((device->_fw_version < 0x08) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
     return rp2040_write_reg(device, RP2040_REG_RESET_LOCK, &lock, 1);
+}
+
+esp_err_t rp2040_set_ws2812_mode(RP2040* device, uint8_t mode) {
+    if ((device->_fw_version < 0x09) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_write_reg(device, RP2040_REG_WS2812_MODE, &mode, 1);
+}
+
+esp_err_t rp2040_set_ws2812_data(RP2040* device, uint8_t position, uint32_t value) {
+    if ((device->_fw_version < 0x09) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if (position >= 10) return ESP_FAIL;
+    return rp2040_write_reg(device, RP2040_REG_WS2812_LED0_DATA0 + (position * 4), (uint8_t*) &value, 4);
+}
+
+esp_err_t rp2040_set_ws2812_length(RP2040* device, uint8_t length) {
+    if ((device->_fw_version < 0x09) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    uint8_t value = 0;
+    return rp2040_write_reg(device, RP2040_REG_WS2812_LENGTH, (uint8_t*) &length, 1);
+}
+
+esp_err_t rp2040_ws2812_trigger(RP2040* device) {
+    if ((device->_fw_version < 0x09) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    uint8_t value = 0;
+    return rp2040_write_reg(device, RP2040_REG_WS2812_TRIGGER, (uint8_t*) &value, 1);
 }
