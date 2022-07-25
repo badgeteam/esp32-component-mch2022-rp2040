@@ -85,6 +85,36 @@ bool rp2040_bl_erase(uint32_t address, uint32_t length) {
     return true;
 }
 
+bool rp2040_bl_crc(uint32_t address, uint32_t length, uint32_t* crc) {
+    if (!uart_is_driver_installed(RP2040_BL_UART)) return false;
+    flush_stdin();
+    char command[12];
+    snprintf(command, 5, "CRCC");
+    memcpy(command + 4, (char*) &address, 4);
+    memcpy(command + 4, (char*) &length, 4);
+    uart_write_bytes(RP2040_BL_UART, command, sizeof (command));
+    uint8_t rx_buffer[8];
+    read_stdin(rx_buffer, sizeof(rx_buffer), 10000);
+    if (memcmp(rx_buffer, "OKOK", 4) != 0) return false;
+    memcpy((uint8_t*) crc, &rx_buffer[4 * 1], 4);
+    return true;
+}
+
+bool rp2040_bl_read(uint32_t address, uint32_t length, uint8_t* data) {
+    if (!uart_is_driver_installed(RP2040_BL_UART)) return false;
+    flush_stdin();
+    char command[12];
+    snprintf(command, 5, "READ");
+    memcpy(command + 4, (char*) &address, 4);
+    memcpy(command + 4, (char*) &length, 4);
+    uart_write_bytes(RP2040_BL_UART, command, sizeof (command));
+    uint8_t rx_buffer[4];
+    read_stdin(rx_buffer, 4, 10000);
+    read_stdin(data, length, 10000);
+    if (memcmp(rx_buffer, "OKOK", 4) != 0) return false;
+    return true;
+}
+
 bool rp2040_bl_write(uint32_t address, uint32_t length, uint8_t* data, uint32_t* crc) {
     if (!uart_is_driver_installed(RP2040_BL_UART)) return false;
     flush_stdin();
