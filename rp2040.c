@@ -338,7 +338,6 @@ esp_err_t rp2040_set_ws2812_data(RP2040* device, uint8_t position, uint32_t valu
 
 esp_err_t rp2040_set_ws2812_length(RP2040* device, uint8_t length) {
     if ((device->_fw_version < 0x09) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
-    uint8_t value = 0;
     return rp2040_write_reg(device, RP2040_REG_WS2812_LENGTH, (uint8_t*) &length, 1);
 }
 
@@ -346,4 +345,26 @@ esp_err_t rp2040_ws2812_trigger(RP2040* device) {
     if ((device->_fw_version < 0x09) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
     uint8_t value = 0;
     return rp2040_write_reg(device, RP2040_REG_WS2812_TRIGGER, (uint8_t*) &value, 1);
+}
+
+esp_err_t rp2040_set_msc_control(RP2040* device, uint8_t value) {
+    if ((device->_fw_version < 0x0D) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_write_reg(device, RP2040_REG_MSC_CONTROL, &value, 1);
+}
+
+esp_err_t rp2040_get_msc_state(RP2040* device, uint8_t* value) {
+    if ((device->_fw_version < 0x0D) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    return rp2040_read_reg(device, RP2040_REG_MSC_STATE, value, 1);
+}
+
+esp_err_t rp2040_set_msc_block_count(RP2040* device, uint8_t lun, uint32_t value) {
+    if ((device->_fw_version < 0x0D) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if (lun > 1) return ESP_FAIL;
+    return rp2040_write_reg(device, (lun == 1) ? RP2040_REG_MSC1_BLOCK_COUNT_LO_A : RP2040_REG_MSC0_BLOCK_COUNT_LO_A, (uint8_t*) &value, 4);
+}
+
+esp_err_t rp2040_set_msc_block_size(RP2040* device, uint8_t lun, uint16_t value) {
+    if ((device->_fw_version < 0x0D) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if (lun > 1) return ESP_FAIL;
+    return rp2040_write_reg(device, (lun == 1) ? RP2040_REG_MSC1_BLOCK_SIZE_LO : RP2040_REG_MSC0_BLOCK_SIZE_LO, (uint8_t*) &value, 2);
 }

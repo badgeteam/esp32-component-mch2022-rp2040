@@ -157,6 +157,20 @@ enum {
     RP2040_REG_WS2812_LED9_DATA1,
     RP2040_REG_WS2812_LED9_DATA2,
     RP2040_REG_WS2812_LED9_DATA3,
+    RP2040_REG_MSC_CONTROL,
+    RP2040_REG_MSC_STATE,
+    RP2040_REG_MSC0_BLOCK_COUNT_LO_A,
+    RP2040_REG_MSC0_BLOCK_COUNT_LO_B,
+    RP2040_REG_MSC0_BLOCK_COUNT_LO_C,
+    RP2040_REG_MSC0_BLOCK_COUNT_HI,
+    RP2040_REG_MSC0_BLOCK_SIZE_LO,
+    RP2040_REG_MSC0_BLOCK_SIZE_HI,
+    RP2040_REG_MSC1_BLOCK_COUNT_LO_A,
+    RP2040_REG_MSC1_BLOCK_COUNT_LO_B,
+    RP2040_REG_MSC1_BLOCK_COUNT_LO_C,
+    RP2040_REG_MSC1_BLOCK_COUNT_HI,
+    RP2040_REG_MSC1_BLOCK_SIZE_LO,
+    RP2040_REG_MSC1_BLOCK_SIZE_HI,
 };
 
 enum { RP2040_BL_REG_FW_VER, RP2040_BL_REG_BL_VER, RP2040_BL_REG_BL_STATE, RP2040_BL_REG_BL_CTRL };
@@ -248,3 +262,8 @@ esp_err_t rp2040_set_ws2812_mode(RP2040* device, uint8_t mode);
 esp_err_t rp2040_set_ws2812_length(RP2040* device, uint8_t length);
 esp_err_t rp2040_set_ws2812_data(RP2040* device, uint8_t position, uint32_t value);
 esp_err_t rp2040_ws2812_trigger(RP2040* device);
+
+esp_err_t rp2040_set_msc_control(RP2040* device, uint8_t value);
+esp_err_t rp2040_get_msc_state(RP2040* device, uint8_t* value);
+esp_err_t rp2040_set_msc_block_count(RP2040* device, uint8_t lun, uint32_t value);
+esp_err_t rp2040_set_msc_block_size(RP2040* device, uint8_t lun, uint16_t value);
