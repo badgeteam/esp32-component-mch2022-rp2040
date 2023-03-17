@@ -174,20 +174,20 @@ esp_err_t rp2040_set_bootloader_ctrl(RP2040* device, uint8_t action) {
 }
 
 esp_err_t rp2040_reboot_to_bootloader(RP2040* device) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     uint8_t value = 0xBE;
     return rp2040_write_reg(device, RP2040_REG_BL_TRIGGER, &value, 1);
 }
 
 esp_err_t rp2040_get_gpio_dir(RP2040* device, uint8_t gpio, bool* direction) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     esp_err_t res = rp2040_read_reg(device, RP2040_REG_GPIO_DIR, &device->_gpio_direction, 1);
     if (res != ESP_OK) return res;
     *direction = (device->_gpio_direction >> gpio) & 0x01;
     return ESP_OK;
 }
 esp_err_t rp2040_set_gpio_dir(RP2040* device, uint8_t gpio, bool direction) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     if (direction) {
         device->_gpio_direction |= 1UL << gpio;
     } else {
@@ -197,7 +197,7 @@ esp_err_t rp2040_set_gpio_dir(RP2040* device, uint8_t gpio, bool direction) {
 }
 
 esp_err_t rp2040_get_gpio_value(RP2040* device, uint8_t gpio, bool* value) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     uint8_t   reg_value;
     esp_err_t res = rp2040_read_reg(device, RP2040_REG_GPIO_IN, &reg_value, 1);
     if (res != ESP_OK) return res;
@@ -206,7 +206,7 @@ esp_err_t rp2040_get_gpio_value(RP2040* device, uint8_t gpio, bool* value) {
 }
 
 esp_err_t rp2040_set_gpio_value(RP2040* device, uint8_t gpio, bool value) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     if (value) {
         device->_gpio_value |= 1UL << gpio;
     } else {
@@ -216,41 +216,41 @@ esp_err_t rp2040_set_gpio_value(RP2040* device, uint8_t gpio, bool value) {
 }
 
 esp_err_t rp2040_get_lcd_backlight(RP2040* device, uint8_t* brightness) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_LCD_BACKLIGHT, brightness, 1);
 }
 
 esp_err_t rp2040_set_lcd_backlight(RP2040* device, uint8_t brightness) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_OK;  // Ignore if unsupported
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_OK;  // Ignore if unsupported
     return rp2040_write_reg(device, RP2040_REG_LCD_BACKLIGHT, &brightness, 1);
 }
 
 esp_err_t rp2040_set_fpga(RP2040* device, bool enabled) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     uint8_t value = enabled ? 0x01 : 0x00;
     return rp2040_write_reg(device, RP2040_REG_FPGA, &value, 1);
 }
 
 esp_err_t rp2040_set_fpga_loopback(RP2040* device, bool enabled, bool loopback) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     uint8_t value = (enabled ? 0x01 : 0x00) | (loopback ? 0x02 : 0x00);
     return rp2040_write_reg(device, RP2040_REG_FPGA, &value, 1);
 }
 
 esp_err_t rp2040_read_buttons(RP2040* device, uint16_t* value) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_INPUT1, (uint8_t*) value, 2);
 }
 
 esp_err_t rp2040_get_uid(RP2040* device, uint8_t* uid) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_UID0, uid, 8);
 }
 
 const float conversion_factor = 3.3f / (1 << 12); // 12-bit ADC with 3.3v vref
 
 esp_err_t rp2040_read_vbat_raw(RP2040* device, uint16_t* value) {
-    if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x02) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_ADC_VALUE_VBAT_LO, (uint8_t*) value, 2);
 }
 
@@ -263,7 +263,7 @@ esp_err_t rp2040_read_vbat(RP2040* device, float* value) {
 }
 
 esp_err_t rp2040_read_vusb_raw(RP2040* device, uint16_t* value) {
-    if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x02) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_ADC_VALUE_VUSB_LO, (uint8_t*) value, 2);
 }
 
@@ -276,32 +276,32 @@ esp_err_t rp2040_read_vusb(RP2040* device, float* value) {
 }
 
 esp_err_t rp2040_read_temp(RP2040* device, uint16_t* value) {
-    if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x02) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_ADC_VALUE_TEMP_LO, (uint8_t*) value, 2);
 }
 
 esp_err_t rp2040_get_charging(RP2040* device, uint8_t* charging) {
-    if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x02) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_CHARGING_STATE, charging, 1);
 }
 
 esp_err_t rp2040_get_usb(RP2040* device, uint8_t* usb) {
-    if ((device->_fw_version < 0x01) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x01) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_USB, usb, 1);
 }
 
 esp_err_t rp2040_get_webusb_mode(RP2040* device, uint8_t* mode) {
-    if ((device->_fw_version < 0x02) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x02) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_WEBUSB_MODE, mode, 1);
 }
 
 esp_err_t rp2040_get_crash_state(RP2040* device, uint8_t* crash_debug) {
-    if ((device->_fw_version < 0x06) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x06) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_CRASH_DEBUG, crash_debug, 1);
 }
 
 esp_err_t rp2040_ir_send(RP2040* device, uint16_t address, uint8_t command) {
-    if ((device->_fw_version < 0x06) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x06) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     uint8_t buffer[4];
     buffer[0] = address & 0xFF; // Address low byte
     buffer[1] = address >> 8; // Address high byte
@@ -311,60 +311,60 @@ esp_err_t rp2040_ir_send(RP2040* device, uint16_t address, uint8_t command) {
 }
 
 esp_err_t rp2040_get_reset_attempted(RP2040* device, uint8_t* reset_attempted) {
-    if ((device->_fw_version < 0x08) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x08) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_RESET_ATTEMPTED, reset_attempted, 1);
 }
 
 esp_err_t rp2040_set_reset_attempted(RP2040* device, uint8_t reset_attempted) {
-    if ((device->_fw_version < 0x08) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x08) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_write_reg(device, RP2040_REG_RESET_ATTEMPTED, &reset_attempted, 1);
 }
 
 esp_err_t rp2040_set_reset_lock(RP2040* device, uint8_t lock) {
-    if ((device->_fw_version < 0x08) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x08) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_write_reg(device, RP2040_REG_RESET_LOCK, &lock, 1);
 }
 
 esp_err_t rp2040_set_ws2812_mode(RP2040* device, uint8_t mode) {
-    if ((device->_fw_version < 0x09) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x09) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_write_reg(device, RP2040_REG_WS2812_MODE, &mode, 1);
 }
 
 esp_err_t rp2040_set_ws2812_data(RP2040* device, uint8_t position, uint32_t value) {
-    if ((device->_fw_version < 0x09) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x09) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     if (position >= 10) return ESP_FAIL;
     return rp2040_write_reg(device, RP2040_REG_WS2812_LED0_DATA0 + (position * 4), (uint8_t*) &value, 4);
 }
 
 esp_err_t rp2040_set_ws2812_length(RP2040* device, uint8_t length) {
-    if ((device->_fw_version < 0x09) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x09) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_write_reg(device, RP2040_REG_WS2812_LENGTH, (uint8_t*) &length, 1);
 }
 
 esp_err_t rp2040_ws2812_trigger(RP2040* device) {
-    if ((device->_fw_version < 0x09) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x09) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     uint8_t value = 0;
     return rp2040_write_reg(device, RP2040_REG_WS2812_TRIGGER, (uint8_t*) &value, 1);
 }
 
 esp_err_t rp2040_set_msc_control(RP2040* device, uint8_t value) {
-    if ((device->_fw_version < 0x0D) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x0D) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_write_reg(device, RP2040_REG_MSC_CONTROL, &value, 1);
 }
 
 esp_err_t rp2040_get_msc_state(RP2040* device, uint8_t* value) {
-    if ((device->_fw_version < 0x0D) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x0D) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_MSC_STATE, value, 1);
 }
 
 esp_err_t rp2040_set_msc_block_count(RP2040* device, uint8_t lun, uint32_t value) {
-    if ((device->_fw_version < 0x0D) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x0D) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     if (lun > 1) return ESP_FAIL;
     return rp2040_write_reg(device, (lun == 1) ? RP2040_REG_MSC1_BLOCK_COUNT_LO_A : RP2040_REG_MSC0_BLOCK_COUNT_LO_A, (uint8_t*) &value, 4);
 }
 
 esp_err_t rp2040_set_msc_block_size(RP2040* device, uint8_t lun, uint16_t value) {
-    if ((device->_fw_version < 0x0D) && (device->_fw_version >= 0xFF)) return ESP_FAIL;
+    if ((device->_fw_version < 0x0D) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     if (lun > 1) return ESP_FAIL;
     return rp2040_write_reg(device, (lun == 1) ? RP2040_REG_MSC1_BLOCK_SIZE_LO : RP2040_REG_MSC0_BLOCK_SIZE_LO, (uint8_t*) &value, 2);
 }
