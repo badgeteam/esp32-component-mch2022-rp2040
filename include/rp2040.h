@@ -249,6 +249,7 @@ esp_err_t rp2040_get_charging(RP2040* device, uint8_t* charging);
 esp_err_t rp2040_get_usb(RP2040* device, uint8_t* usb);
 
 esp_err_t rp2040_get_webusb_mode(RP2040* device, uint8_t* mode);
+esp_err_t rp2040_exit_webusb_mode(RP2040* device);
 
 esp_err_t rp2040_get_crash_state(RP2040* device, uint8_t* crash_debug);
 

@@ -295,6 +295,12 @@ esp_err_t rp2040_get_webusb_mode(RP2040* device, uint8_t* mode) {
     return rp2040_read_reg(device, RP2040_REG_WEBUSB_MODE, mode, 1);
 }
 
+esp_err_t rp2040_exit_webusb_mode(RP2040* device) {
+    if ((device->_fw_version < 0x0E) || (device->_fw_version == 0xFF)) return ESP_FAIL;
+    uint8_t mode = 0;
+    return rp2040_write_reg(device, RP2040_REG_WEBUSB_MODE, &mode, 1);
+}
+
 esp_err_t rp2040_get_crash_state(RP2040* device, uint8_t* crash_debug) {
     if ((device->_fw_version < 0x06) || (device->_fw_version == 0xFF)) return ESP_FAIL;
     return rp2040_read_reg(device, RP2040_REG_CRASH_DEBUG, crash_debug, 1);
