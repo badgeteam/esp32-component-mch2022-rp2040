@@ -138,6 +138,7 @@ static void IRAM_ATTR rp2040_intr_handler(void* arg) {
 
 esp_err_t rp2040_init(RP2040* device) {
     esp_err_t res;
+    static bool isr_installed = false;
 
     res = rp2040_get_firmware_version(device, &device->_fw_version);
     if (res != ESP_OK) {
@@ -168,6 +169,11 @@ esp_err_t rp2040_init(RP2040* device) {
 
     // Attach interrupt to interrupt pin
     if (device->pin_interrupt >= 0) {
+        // Install ISR service once
+        if (!isr_installed) {
+            gpio_install_isr_service(ESP_INTR_FLAG_IRAM);
+            isr_installed = true;
+        }
         res = gpio_isr_handler_add(device->pin_interrupt, rp2040_intr_handler, (void*) device);
         if (res != ESP_OK) return res;
 
